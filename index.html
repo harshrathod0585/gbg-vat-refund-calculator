@@ -88,8 +88,9 @@ footer a:hover{color:var(--wine)}
 <main class="wrap">
 
 <h1>VAT Refund Calculator</h1>
-<p class="intro">Foreign patients could once reclaim the 10% VAT on cosmetic procedures in Korea.
-That scheme ended on <b>31 December 2025</b>. Enter your surgery date below to see where you stand.</p>
+<p class="intro">Estimates the VAT refund under Korea's scheme for foreign patients, which
+applied to procedures performed up to <b>31 December 2025</b>. Enter your quote in your own
+currency rather than converting it first.</p>
 
 <div class="field">
   <label class="lbl" for="amount">Surgery cost</label>
@@ -99,11 +100,6 @@ That scheme ended on <b>31 December 2025</b>. Enter your surgery date below to s
     <select id="cur" aria-label="Currency"></select>
   </div>
   <div class="chips" id="chips" role="group" aria-label="Common amounts"></div>
-</div>
-
-<div class="field">
-  <label class="lbl" for="date">Date of surgery</label>
-  <input type="date" id="date">
 </div>
 
 <section class="panel" aria-live="polite">
@@ -146,7 +142,6 @@ const NAMES = {
   KZT:"Kazakhstani tenge", MNT:"Mongolian tugrik", CHF:"Swiss franc", NZD:"New Zealand dollar"
 };
 const ZERO_DP = new Set(["KRW","JPY","VND","IDR","MNT","KZT"]);
-const CUTOFF = "2025-12-31";
 const VAT = 0.10;
 const RETAINED = 0.30;      // refund operator's cut of the VAT under the old scheme
 
@@ -162,21 +157,18 @@ const toKRW   = (v, c) => v * KRW_PER[c];
 const fromKRW = (v, c) => v / KRW_PER[c];
 
 /* Pure, so the self-check at the bottom can exercise it directly. */
-function compute(amount, cur, date, inclusive){
+function compute(amount, cur, inclusive){
   const gross = toKRW(amount, cur);
   const net   = inclusive ? gross / (1 + VAT) : gross;
   const vat   = inclusive ? gross - net : gross * VAT;
   const payable = net + vat;
-  // A blank or malformed date must never read as eligible: "" <= "2025-12-31" is true.
-  const eligible = /^\d{4}-\d{2}-\d{2}$/.test(date) && date <= CUTOFF;
-  const refund = eligible ? vat * (1 - RETAINED) : 0;
-  return { net, vat, payable, eligible, refund, final: payable - refund };
+  const refund = vat * (1 - RETAINED);
+  return { net, vat, payable, refund, final: payable - refund };
 }
 
 const codes = Object.keys(KRW_PER);
 $("cur").innerHTML = codes.map(c => `<option value="${c}">${c} — ${NAMES[c]}</option>`).join("");
 $("cur").value = "KRW";
-$("date").value = new Date().toISOString().slice(0, 10);
 $("fxdate").textContent = FX_DATE;
 
 const CHIP_KRW = [3e6, 5e6, 1e7, 2e7];
@@ -212,7 +204,7 @@ function setFavicon(code){
 function render(){
   const C = $("cur").value;
   const amount = Math.max(0, +$("amount").value || 0);
-  const r = compute(amount, C, $("date").value, true);  // Korean quotes are VAT-inclusive
+  const r = compute(amount, C, true);  // Korean quotes are VAT-inclusive
   const showKRW = C !== "KRW";
   const prim = krw => money(fromKRW(krw, C), C);
 
@@ -222,9 +214,7 @@ function render(){
   const lost = r.vat * (1 - RETAINED);
   const shown = r.eligible ? r.refund : 0;
 
-  /* The card, the rows and the disclaimer use the incumbent calculator's exact
-     wording. The surgery date only changes the numbers: from 1 January 2026 the
-     refund is zero. Why that is, is stated once in the intro at the top. */
+  /* The card, the rows and the disclaimer use the incumbent calculator's exact wording. */
   $("fig").className = r.refund > 0 ? "fig" : "fig z";
   $("fig").textContent = money(r.refund, "KRW");
   $("approx").textContent = showKRW
@@ -260,27 +250,22 @@ $("cur").addEventListener("change", () => {
   render();
 });
 
-["amount","cur","date"].forEach(id => $(id).addEventListener("input", render));
+["amount","cur"].forEach(id => $(id).addEventListener("input", render));
 render();
 
 /* Self-check on what's easy to silently break. */
 (function selfCheck(){
   const near = (a, b) => Math.abs(a - b) < 0.5;
-  const inc = compute(5000000, "KRW", "2025-06-01", true);
+  const inc = compute(5000000, "KRW", true);
   console.assert(near(inc.vat, 454545.45), "VAT-inclusive: tax is quote/11, not quote*0.10");
-  console.assert(near(inc.refund, 318181.82), "Legacy refund is 70% of the VAT");
-
-  const exc = compute(3000000, "KRW", "2025-06-01", false);
-  console.assert(near(exc.payable, 3300000), "Pre-VAT quote: 10% is added on top");
-
-  console.assert(compute(1, "KRW", "2025-12-31", true).eligible, "31 Dec 2025 is the last eligible day");
-  console.assert(compute(1, "KRW", "2026-01-01", true).refund === 0, "2026 onward: exactly zero");
-  console.assert(near(compute(1, "USD", "2026-01-01", true).payable, KRW_PER.USD),
+  console.assert(near(inc.refund, 318181.82), "Net refund is 70% of the VAT");
+  console.assert(near(compute(3000000, "KRW", false).payable, 3300000),
+    "Pre-VAT quote: 10% is added on top");
+  console.assert(near(compute(1, "USD", true).payable, KRW_PER.USD),
     "Non-KRW quotes convert to KRW before the tax maths");
-  console.assert(!compute(5000000, "KRW", "", true).eligible,
-    "A blank date must not read as eligible");
-  console.assert(compute(5000000, "KRW", "", true).refund === 0,
-    "A blank date must return zero refund, not a claimable figure");
+  const carried = nice(fromKRW(toKRW(5000000, "KRW"), "USD"));
+  console.assert(carried > 3000 && carried < 5000,
+    "Switching KRW->USD must carry the value across, not reuse the digits");
 
   console.log("%c✓ self-check passed", "color:#2f6b41;font-weight:600");
 })();
