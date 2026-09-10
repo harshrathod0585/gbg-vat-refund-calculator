@@ -244,9 +244,9 @@ function render(){
 
   $("cap").textContent = r.eligible ? "Estimated VAT Refund" : "Non-refundable VAT";
   $("fig").className = "fig";
-  $("fig").textContent = money(fromKRW(headline, C), C);
+  $("fig").textContent = money(headline, "KRW");
   $("approx").textContent = showKRW
-    ? `In Korean won, what the clinic charges: ${money(headline, "KRW")}`
+    ? `Approximate in your currency: ${whole(fromKRW(headline, C), C)} ${C}`
     : "";
 
   const per = KRW_PER[C];
@@ -258,17 +258,16 @@ function render(){
     ? rate + "Net refund assumes 70% of the VAT portion is returned after "
       + "refund-operator processing."
     : rate + (dateEntered()
-        ? `Korea abolished the refund scheme on 31 December 2025. Before that date this quote `
-          + `would have returned <span class="strike">${money(fromKRW(lost, C), C)}</span>. `
-          + `It is now simply part of what you pay.`
-        : "Enter your surgery date above. The refund ended on 31 December 2025.");
+        ? `Refund scheme abolished 31 December 2025. This quote would have returned `
+          + `<span class="strike">${money(lost, "KRW")}</span>.`
+        : "Enter your surgery date above. The refund ended 31 December 2025.");
 
   /* Eligible: the same three rows and labels as the calculator this replaces.
      Not eligible: a refund breakdown is meaningless, so the table answers the
      question that is actually live — what you hand over. */
   const row = (label, krw, cls = "") =>
     `<tr class="${cls}"><td>${label}</td>` +
-    `<td>${money(fromKRW(krw, C), C)}${showKRW ? `<small>${money(krw, "KRW")}</small>` : ""}</td></tr>`;
+    `<td>${money(krw, "KRW")}${showKRW ? `<small>${whole(fromKRW(krw, C), C)}</small>` : ""}</td></tr>`;
 
   $("rows").innerHTML = r.eligible
     ? row("VAT portion (10%)", r.vat)
@@ -282,9 +281,8 @@ function render(){
     ? "This calculator provides estimates only. Actual refund amounts may vary based on the "
       + "specific tax category of your procedure and processing fees. Always confirm eligibility "
       + "directly with your clinic."
-    : "The VAT is still charged — it is simply no longer refundable, so it forms part of what "
-      + "you pay. This calculator provides estimates only. Always confirm your final payable "
-      + "amount directly with your clinic.";
+    : "The VAT is still charged, it is simply no longer refundable. Estimates only — confirm "
+      + "your final payable amount directly with your clinic.";
 }
 
 let prevCur = $("cur").value;
