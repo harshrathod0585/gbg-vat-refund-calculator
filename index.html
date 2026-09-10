@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VAT Refund Calculator — 2026 Rules | Gangnam Beauty Guide</title>
+<meta name="description" content="Korea's cosmetic surgery VAT refund for foreign patients ended on 31 December 2025. Calculate your refund, or what you'll now pay, in your own currency.">
+<link rel="canonical" href="https://gbg-vat-refund.vercel.app/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="VAT Refund Calculator — 2026 Rules">
+<meta property="og:description" content="The refund ended 31 December 2025. Calculate what your surgery actually costs now.">
+<meta name="theme-color" content="#9d3352">
+<link rel="icon" id="fav" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%239d3352'/%3E%3Ctext x='16' y='23' font-family='Georgia,serif' font-size='20' font-weight='700' fill='white' text-anchor='middle'%3E%E2%82%A9%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  color-scheme:light;
+  --wine:#9d3352; --tint:#fdf2f4; --tint-line:#f4dee4;
+  --ink:#2b2529; --body:#544c51; --muted:#8b8288; --line:#e8e3e5;
+  --serif:"Playfair Display",Georgia,serif;
+  --sans:"Plus Jakarta Sans",ui-sans-serif,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+*{box-sizing:border-box}
+body{margin:0;background:#fff;color:var(--body);font-family:var(--sans);
+  font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}
+.wrap{max-width:620px;margin:0 auto;padding:56px 24px 80px}
+
+h1{font-size:22px;font-weight:600;color:var(--ink);letter-spacing:-.01em;margin:0 0 8px}
+.intro{font-size:14.5px;color:var(--muted);margin:0 0 36px;max-width:52ch}
+.intro b{color:var(--body);font-weight:600}
+
+.field{margin-bottom:24px}
+label.lbl{display:block;font-size:14px;font-weight:500;color:var(--ink);margin-bottom:8px}
+.combo{display:flex;gap:8px}
+.combo .amt{flex:1 1 auto;min-width:0}
+input,select{width:100%;padding:12px 14px;font-family:var(--sans);font-size:16px;
+  color:var(--ink);background:#fff;border:1px solid #ddd6d9;border-radius:10px;
+  transition:border-color .15s}
+select{cursor:pointer;-webkit-appearance:none;appearance:none;padding-right:34px;
+  background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='7'%3E%3Cpath d='M1 1l4.5 4.5L10 1' stroke='%238b8288' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 13px center}
+.combo select{flex:0 0 176px;width:176px}
+input:focus-visible,select:focus-visible{outline:none;border-color:var(--wine)}
+input[type=number]{-moz-appearance:textfield}
+input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+
+.chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
+.chip{font-family:var(--sans);font-size:13.5px;font-weight:500;color:#5c5459;
+  background:#f2f1f2;border:none;border-radius:999px;padding:8px 15px;cursor:pointer;
+  transition:background .15s}
+.chip:hover{background:#e9e7e9}
+.chip[aria-pressed=true]{background:var(--wine);color:#fff}
+
+.toggle{display:flex;gap:10px;align-items:flex-start;cursor:pointer;font-size:14px;color:var(--ink)}
+.toggle input{width:16px;height:16px;flex:none;margin:4px 0 0;accent-color:var(--wine);cursor:pointer}
+.toggle small{display:block;color:var(--muted);font-size:13px;margin-top:2px}
+
+.panel{background:var(--tint);border:1px solid var(--tint-line);border-radius:12px;
+  padding:22px 24px;margin:32px 0 28px}
+.panel .cap{font-size:11.5px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--wine);margin:0 0 12px}
+.fig{font-family:var(--serif);font-weight:600;font-size:40px;line-height:1;
+  color:var(--wine);margin:0}
+.fig.zero{font-family:var(--sans);font-size:34px;letter-spacing:.05em;
+  color:var(--muted);opacity:1}
+.approx{font-size:14.5px;color:var(--ink);margin:12px 0 0}
+.small{font-size:13px;color:var(--muted);margin:6px 0 0;line-height:1.55}
+.strike{text-decoration:line-through;text-decoration-color:rgba(157,51,82,.5)}
+
+table{width:100%;border-collapse:collapse;font-size:14.5px}
+td{padding:12px 0;border-bottom:1px solid var(--line);color:var(--body)}
+td:last-child{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--ink)}
+td small{display:block;color:var(--muted);font-size:12.5px;margin-top:2px}
+tr.sum td{border-bottom:none;font-weight:600;color:var(--ink)}
+tr.dim td,tr.dim td:last-child{color:var(--muted)}
+tr.dim td:last-child{text-decoration:line-through;text-decoration-color:#ccc4c8}
+
+footer{margin-top:32px;font-size:13px;color:var(--muted);line-height:1.7}
+footer a{color:var(--muted);text-underline-offset:2px}
+footer a:hover{color:var(--wine)}
+
+@media (max-width:480px){
+  .wrap{padding:36px 20px 64px}
+  .combo{flex-wrap:wrap}
+  .combo select{flex:1 1 100%;width:100%}
+}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<main class="wrap">
+
+<h1>VAT Refund Calculator</h1>
+<p class="intro">Foreign patients could once reclaim the 10% VAT on cosmetic procedures in Korea.
+That scheme ended on <b>31 December 2025</b>. Enter your surgery date below to see where you stand.</p>
+
+<div class="field">
+  <label class="lbl" for="amount">Surgery cost</label>
+  <div class="combo">
+    <div class="amt"><input type="number" id="amount" value="5000000" min="0" step="1000"
+      inputmode="decimal"></div>
+    <select id="cur" aria-label="Currency"></select>
+  </div>
+  <div class="chips" id="chips" role="group" aria-label="Common amounts"></div>
+</div>
+
+<div class="field">
+  <label class="lbl" for="date">Date of surgery</label>
+  <input type="date" id="date">
+</div>
+
+<div class="field">
+  <label class="toggle">
+    <input type="checkbox" id="incl" checked>
+    <span>My quote already includes 10% VAT
+      <small>Korean clinics often quote pre-VAT. Untick if you're unsure.</small></span>
+  </label>
+</div>
+
+<section class="panel" aria-live="polite">
+  <p class="cap" id="cap">Estimated VAT Refund</p>
+  <p class="fig" id="fig"></p>
+  <p class="approx" id="approx"></p>
+  <p class="small" id="note"></p>
+</section>
+
+<table><tbody id="rows"></tbody></table>
+
+<footer>
+  <p id="disclaim"></p>
+  <p><a href="https://www.koreaherald.com/article/10633779">The Korea Herald</a> and
+  <a href="https://www.koreabiomed.com/news/articleView.html?idxno=28501">Korea Biomedical Review</a>
+  on the scheme ending. Rates as of <span id="fxdate"></span>, frozen into this page.
+  Estimates only — confirm your final payable amount with your clinic in writing.</p>
+</footer>
+
+</main>
+
+<script>
+"use strict";
+
+/* Rates fetched from exchangerate-api.com at build time and frozen in, deliberately:
+   a static page can't be down, a live call can fail in front of the reader. */
+const FX_DATE = "10 September 2026";
+const KRW_PER = {
+  KRW:1, USD:1338.69, EUR:1557.63, GBP:1814.88, JPY:8.7189, CNY:199.76,
+  SGD:1059.32, AUD:966.18, CAD:970.87, HKD:170.68, TWD:42.5876, THB:40.6851,
+  VND:0.0519, IDR:0.0765, MYR:328.95, PHP:21.4014, INR:14.0752, AED:364.56,
+  RUB:15.6055, KZT:2.9419, MNT:0.3702, CHF:1655.63, NZD:782.47
+};
+const NAMES = {
+  KRW:"South Korean won", USD:"US dollar", EUR:"Euro", GBP:"British pound",
+  JPY:"Japanese yen", CNY:"Chinese yuan", SGD:"Singapore dollar", AUD:"Australian dollar",
+  CAD:"Canadian dollar", HKD:"Hong Kong dollar", TWD:"Taiwan dollar", THB:"Thai baht",
+  VND:"Vietnamese dong", IDR:"Indonesian rupiah", MYR:"Malaysian ringgit",
+  PHP:"Philippine peso", INR:"Indian rupee", AED:"UAE dirham", RUB:"Russian ruble",
+  KZT:"Kazakhstani tenge", MNT:"Mongolian tugrik", CHF:"Swiss franc", NZD:"New Zealand dollar"
+};
+const ZERO_DP = new Set(["KRW","JPY","VND","IDR","MNT","KZT"]);
+const CUTOFF = "2025-12-31";
+const VAT = 0.10;
+const RETAINED = 0.30;      // refund operator's cut of the VAT under the old scheme
+
+const $ = id => document.getElementById(id);
+const whole = (v, c) => new Intl.NumberFormat("en-US", {
+  style:"currency", currency:c, maximumFractionDigits:0 }).format(v);
+const dateEntered = () => /^\d{4}-\d{2}-\d{2}$/.test($("date").value);
+const money = (v, c) => new Intl.NumberFormat("en-US", {
+  style:"currency", currency:c,
+  minimumFractionDigits: ZERO_DP.has(c) ? 0 : 2,
+  maximumFractionDigits: ZERO_DP.has(c) ? 0 : 2
+}).format(v);
+const toKRW   = (v, c) => v * KRW_PER[c];
+const fromKRW = (v, c) => v / KRW_PER[c];
+
+/* Pure, so the self-check at the bottom can exercise it directly. */
+function compute(amount, cur, date, inclusive){
+  const gross = toKRW(amount, cur);
+  const net   = inclusive ? gross / (1 + VAT) : gross;
+  const vat   = inclusive ? gross - net : gross * VAT;
+  const payable = net + vat;
+  // A blank or malformed date must never read as eligible: "" <= "2025-12-31" is true.
+  const eligible = /^\d{4}-\d{2}-\d{2}$/.test(date) && date <= CUTOFF;
+  const refund = eligible ? vat * (1 - RETAINED) : 0;
+  return { net, vat, payable, eligible, refund, final: payable - refund };
+}
+
+const codes = Object.keys(KRW_PER);
+$("cur").innerHTML = codes.map(c => `<option value="${c}">${c} — ${NAMES[c]}</option>`).join("");
+$("cur").value = "KRW";
+$("date").value = new Date().toISOString().slice(0, 10);
+$("fxdate").textContent = FX_DATE;
+
+const CHIP_KRW = [3e6, 5e6, 1e7, 2e7];
+const nice = v => {
+  const step = v >= 1e6 ? 1e5 : v >= 1e4 ? 1e3 : v >= 1e3 ? 100 : v >= 100 ? 10 : 1;
+  return Math.max(step, Math.round(v / step) * step);
+};
+function drawChips(){
+  const c = $("cur").value, current = +$("amount").value;
+  $("chips").innerHTML = CHIP_KRW.map(k => {
+    const v = nice(fromKRW(k, c));
+    return `<button type="button" class="chip" data-v="${v}"
+      aria-pressed="${Math.abs(v - current) < 0.5}">${money(v, c)}</button>`;
+  }).join("");
+}
+$("chips").addEventListener("click", e => {
+  const b = e.target.closest(".chip");
+  if (b){ $("amount").value = b.dataset.v; render(); }
+});
+
+/* Tab icon carries the selected currency's symbol. */
+function setFavicon(code){
+  const sym = new Intl.NumberFormat("en-US", { style:"currency", currency:code })
+    .formatToParts(0).find(p => p.type === "currency").value;
+  const size = sym.length === 1 ? 21 : sym.length === 2 ? 15 : sym.length === 3 ? 12 : 10;
+  $("fav").href = "data:image/svg+xml," + encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">`
+    + `<rect width="32" height="32" rx="8" fill="#9d3352"/>`
+    + `<text x="16" y="${16 + size * 0.36}" font-family="Georgia,serif" font-size="${size}"`
+    + ` font-weight="700" fill="#fff" text-anchor="middle">${sym}</text></svg>`);
+}
+
+function render(){
+  const C = $("cur").value;
+  const amount = Math.max(0, +$("amount").value || 0);
+  const r = compute(amount, C, $("date").value, $("incl").checked);
+  const showKRW = C !== "KRW";
+  const prim = krw => money(fromKRW(krw, C), C);
+
+  drawChips();
+  setFavicon(C);
+
+  const lost = r.vat * (1 - RETAINED);
+  const shown = r.eligible ? r.refund : 0;
+
+  /* Same four lines as the calculator this replaces: caption, won figure,
+     "approximate in your currency", then the planning rate and the assumption.
+     With no refund available, a grey zero is true but useless — so the card
+     leads with the number that still changes hands: the VAT you now absorb. */
+  const headline = r.eligible ? r.refund : r.vat;
+
+  $("cap").textContent = r.eligible ? "Estimated VAT Refund" : "Non-refundable VAT";
+  $("fig").className = "fig";
+  $("fig").textContent = money(fromKRW(headline, C), C);
+  $("approx").textContent = showKRW
+    ? `In Korean won, what the clinic charges: ${money(headline, "KRW")}`
+    : "";
+
+  const per = KRW_PER[C];
+  const rate = !showKRW ? ""
+    : (per >= 100 ? `Planning rate: ${money(per, "KRW")}/${C}. `
+                  : `Planning rate: ${money(1000, "KRW")} = ${money(fromKRW(1000, C), C)}. `);
+
+  $("note").innerHTML = r.eligible
+    ? rate + "Net refund assumes 70% of the VAT portion is returned after "
+      + "refund-operator processing."
+    : rate + (dateEntered()
+        ? `Korea abolished the refund scheme on 31 December 2025. Before that date this quote `
+          + `would have returned <span class="strike">${money(fromKRW(lost, C), C)}</span>. `
+          + `It is now simply part of what you pay.`
+        : "Enter your surgery date above. The refund ended on 31 December 2025.");
+
+  /* Eligible: the same three rows and labels as the calculator this replaces.
+     Not eligible: a refund breakdown is meaningless, so the table answers the
+     question that is actually live — what you hand over. */
+  const row = (label, krw, cls = "") =>
+    `<tr class="${cls}"><td>${label}</td>` +
+    `<td>${money(fromKRW(krw, C), C)}${showKRW ? `<small>${money(krw, "KRW")}</small>` : ""}</td></tr>`;
+
+  $("rows").innerHTML = r.eligible
+    ? row("VAT portion (10%)", r.vat)
+      + row("Typical processing retention (30%)", -(r.vat * RETAINED))
+      + row("Estimated net refund", r.refund, "sum")
+    : row("Procedure, before tax", r.net)
+      + row("VAT at 10%, non-refundable", r.vat)
+      + row("Total you pay", r.payable, "sum");
+
+  $("disclaim").textContent = r.eligible
+    ? "This calculator provides estimates only. Actual refund amounts may vary based on the "
+      + "specific tax category of your procedure and processing fees. Always confirm eligibility "
+      + "directly with your clinic."
+    : "The VAT is still charged — it is simply no longer refundable, so it forms part of what "
+      + "you pay. This calculator provides estimates only. Always confirm your final payable "
+      + "amount directly with your clinic.";
+}
+
+let prevCur = $("cur").value;
+$("cur").addEventListener("change", () => {
+  const next = $("cur").value, amt = +$("amount").value || 0;
+  if (amt > 0 && next !== prevCur) $("amount").value = nice(fromKRW(toKRW(amt, prevCur), next));
+  prevCur = next;
+  render();
+});
+
+["amount","cur","date","incl"].forEach(id => $(id).addEventListener("input", render));
+render();
+
+/* Self-check on what's easy to silently break. */
+(function selfCheck(){
+  const near = (a, b) => Math.abs(a - b) < 0.5;
+  const inc = compute(5000000, "KRW", "2025-06-01", true);
+  console.assert(near(inc.vat, 454545.45), "VAT-inclusive: tax is quote/11, not quote*0.10");
+  console.assert(near(inc.refund, 318181.82), "Legacy refund is 70% of the VAT");
+
+  const exc = compute(3000000, "KRW", "2025-06-01", false);
+  console.assert(near(exc.payable, 3300000), "Pre-VAT quote: 10% is added on top");
+
+  console.assert(compute(1, "KRW", "2025-12-31", true).eligible, "31 Dec 2025 is the last eligible day");
+  console.assert(compute(1, "KRW", "2026-01-01", true).refund === 0, "2026 onward: exactly zero");
+  console.assert(near(compute(1, "USD", "2026-01-01", true).payable, KRW_PER.USD),
+    "Non-KRW quotes convert to KRW before the tax maths");
+  console.assert(!compute(5000000, "KRW", "", true).eligible,
+    "A blank date must not read as eligible");
+  console.assert(compute(5000000, "KRW", "", true).refund === 0,
+    "A blank date must return zero refund, not a claimable figure");
+
+  console.log("%c✓ self-check passed", "color:#2f6b41;font-weight:600");
+})();
+</script>
+</body>
+</html>
