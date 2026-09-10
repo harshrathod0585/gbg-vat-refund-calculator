@@ -53,10 +53,6 @@ input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-
 .chip:hover{background:#e9e7e9}
 .chip[aria-pressed=true]{background:var(--wine);color:#fff}
 
-.toggle{display:flex;gap:10px;align-items:flex-start;cursor:pointer;font-size:14px;color:var(--ink)}
-.toggle input{width:16px;height:16px;flex:none;margin:4px 0 0;accent-color:var(--wine);cursor:pointer}
-.toggle small{display:block;color:var(--muted);font-size:13px;margin-top:2px}
-
 .panel{background:var(--tint);border:1px solid var(--tint-line);border-radius:12px;
   padding:22px 24px;margin:32px 0 28px}
 .panel .cap{font-size:11.5px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;
@@ -109,14 +105,6 @@ That scheme ended on <b>31 December 2025</b>. Enter your surgery date below to s
 <div class="field">
   <label class="lbl" for="date">Date of surgery</label>
   <input type="date" id="date">
-</div>
-
-<div class="field">
-  <label class="toggle">
-    <input type="checkbox" id="incl" checked>
-    <span>My quote already includes 10% VAT
-      <small>Korean clinics often quote pre-VAT. Untick if you're unsure.</small></span>
-  </label>
 </div>
 
 <section class="panel" aria-live="polite">
@@ -226,7 +214,7 @@ function setFavicon(code){
 function render(){
   const C = $("cur").value;
   const amount = Math.max(0, +$("amount").value || 0);
-  const r = compute(amount, C, $("date").value, $("incl").checked);
+  const r = compute(amount, C, $("date").value, true);  // Korean quotes are VAT-inclusive
   const showKRW = C !== "KRW";
   const prim = krw => money(fromKRW(krw, C), C);
 
@@ -293,7 +281,7 @@ $("cur").addEventListener("change", () => {
   render();
 });
 
-["amount","cur","date","incl"].forEach(id => $(id).addEventListener("input", render));
+["amount","cur","date"].forEach(id => $(id).addEventListener("input", render));
 render();
 
 /* Self-check on what's easy to silently break. */
