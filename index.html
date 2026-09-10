@@ -59,11 +59,10 @@ input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-
   color:var(--wine);margin:0 0 12px}
 .fig{font-family:var(--serif);font-weight:600;font-size:40px;line-height:1;
   color:var(--wine);margin:0}
-.fig.zero{font-family:var(--sans);font-size:34px;letter-spacing:.05em;
-  color:var(--muted);opacity:1}
+/* Playfair's ₩ beside a lining zero reads as the word "Wo"; track it apart. */
+.fig.z{letter-spacing:.16em}
 .approx{font-size:14.5px;color:var(--ink);margin:12px 0 0}
 .small{font-size:13px;color:var(--muted);margin:6px 0 0;line-height:1.55}
-.strike{text-decoration:line-through;text-decoration-color:rgba(157,51,82,.5)}
 
 table{width:100%;border-collapse:collapse;font-size:14.5px}
 td{padding:12px 0;border-bottom:1px solid var(--line);color:var(--body)}
@@ -108,7 +107,7 @@ That scheme ended on <b>31 December 2025</b>. Enter your surgery date below to s
 </div>
 
 <section class="panel" aria-live="polite">
-  <p class="cap" id="cap">Estimated VAT Refund</p>
+  <p class="cap">Estimated VAT Refund</p>
   <p class="fig" id="fig"></p>
   <p class="approx" id="approx"></p>
   <p class="small" id="note"></p>
@@ -154,7 +153,6 @@ const RETAINED = 0.30;      // refund operator's cut of the VAT under the old sc
 const $ = id => document.getElementById(id);
 const whole = (v, c) => new Intl.NumberFormat("en-US", {
   style:"currency", currency:c, maximumFractionDigits:0 }).format(v);
-const dateEntered = () => /^\d{4}-\d{2}-\d{2}$/.test($("date").value);
 const money = (v, c) => new Intl.NumberFormat("en-US", {
   style:"currency", currency:c,
   minimumFractionDigits: ZERO_DP.has(c) ? 0 : 2,
@@ -224,53 +222,34 @@ function render(){
   const lost = r.vat * (1 - RETAINED);
   const shown = r.eligible ? r.refund : 0;
 
-  /* Same four lines as the calculator this replaces: caption, won figure,
-     "approximate in your currency", then the planning rate and the assumption.
-     With no refund available, a grey zero is true but useless — so the card
-     leads with the number that still changes hands: the VAT you now absorb. */
-  const headline = r.eligible ? r.refund : r.vat;
-
-  $("cap").textContent = r.eligible ? "Estimated VAT Refund" : "Non-refundable VAT";
-  $("fig").className = "fig";
-  $("fig").textContent = money(headline, "KRW");
+  /* The card, the rows and the disclaimer use the incumbent calculator's exact
+     wording. The surgery date only changes the numbers: from 1 January 2026 the
+     refund is zero. Why that is, is stated once in the intro at the top. */
+  $("fig").className = r.refund > 0 ? "fig" : "fig z";
+  $("fig").textContent = money(r.refund, "KRW");
   $("approx").textContent = showKRW
-    ? `Approximate in your currency: ${whole(fromKRW(headline, C), C)} ${C}`
+    ? `Approximate in your currency: ${whole(fromKRW(r.refund, C), C)} ${C}`
     : "";
 
   const per = KRW_PER[C];
   const rate = !showKRW ? ""
     : (per >= 100 ? `Planning rate: ${money(per, "KRW")}/${C}. `
                   : `Planning rate: ${money(1000, "KRW")} = ${money(fromKRW(1000, C), C)}. `);
+  $("note").textContent = rate + "Net refund assumes 70% of the VAT portion is returned "
+    + "after refund-operator processing.";
 
-  $("note").innerHTML = r.eligible
-    ? rate + "Net refund assumes 70% of the VAT portion is returned after "
-      + "refund-operator processing."
-    : rate + (dateEntered()
-        ? `Refund scheme abolished 31 December 2025. This quote would have returned `
-          + `<span class="strike">${money(lost, "KRW")}</span>.`
-        : "Enter your surgery date above. The refund ended 31 December 2025.");
-
-  /* Eligible: the same three rows and labels as the calculator this replaces.
-     Not eligible: a refund breakdown is meaningless, so the table answers the
-     question that is actually live — what you hand over. */
   const row = (label, krw, cls = "") =>
     `<tr class="${cls}"><td>${label}</td>` +
     `<td>${money(krw, "KRW")}${showKRW ? `<small>${whole(fromKRW(krw, C), C)}</small>` : ""}</td></tr>`;
 
-  $("rows").innerHTML = r.eligible
-    ? row("VAT portion (10%)", r.vat)
-      + row("Typical processing retention (30%)", -(r.vat * RETAINED))
-      + row("Estimated net refund", r.refund, "sum")
-    : row("Procedure, before tax", r.net)
-      + row("VAT at 10%, non-refundable", r.vat)
-      + row("Total you pay", r.payable, "sum");
+  $("rows").innerHTML =
+    row("VAT portion (10%)", r.vat) +
+    row("Typical processing retention (30%)", -(r.vat * RETAINED)) +
+    row("Estimated net refund", r.refund, "sum");
 
-  $("disclaim").textContent = r.eligible
-    ? "This calculator provides estimates only. Actual refund amounts may vary based on the "
-      + "specific tax category of your procedure and processing fees. Always confirm eligibility "
-      + "directly with your clinic."
-    : "The VAT is still charged, it is simply no longer refundable. Estimates only — confirm "
-      + "your final payable amount directly with your clinic.";
+  $("disclaim").textContent = "This calculator provides estimates only. Actual refund amounts "
+    + "may vary based on the specific tax category of your procedure and processing fees. "
+    + "Always confirm eligibility directly with your clinic.";
 }
 
 let prevCur = $("cur").value;
